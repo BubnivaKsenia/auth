@@ -6,25 +6,40 @@
 //
 
 import UIKit
+import Alamofire
+import SwiftyJSON
 
 class ViewController: UIViewController {
     
-    @IBOutlet weak var inoutLogin: UITextField!
+    @IBOutlet weak var inputLogin: UITextField!
     @IBOutlet weak var inputPassword: UITextField!
+    let userDef = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        print("You token is:\(userDef.value(forKey: "token"))")
     }
 
     @IBAction func authing(_ sender: Any) {
         
-        guard !inoutLogin.text!.isEmpty else {
+        guard !inputLogin.text!.isEmpty else {
             return showAlertDialog(message: "Brat, you slep? Where login?")
         }
         guard !inputPassword.text!.isEmpty else {
             return showAlertDialog(message: "Brat, you stupid? Where parol to?")
         }
+        let url = "https://recipe.mdwar.ru/signin?Login=\(inputLogin.text!)&pass=text\(inputPassword.text!)"
+            AF.request(url, method: .post).validate().responseJSON{(response) in
+                switch response.result{
+                case.success(let value):
+                    let json = JSON(value)
+                    let jsonToken = json["notice"]["token"].stringValue
+                    self.userDef.setValue(jsonToken, forKey: "token")
+                case.failure(let error):
+                    self.showAlertDialog(message: error.localizedDescription)
+                }
+            }
         
         performSegue(withIdentifier: "auth", sender: nil)
     }
